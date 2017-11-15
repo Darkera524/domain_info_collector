@@ -31,7 +31,7 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 
 	doc := etree.NewDocument()
 
-	if err := doc.ReadFromFile("E:\\test.xml"); err != nil {
+	if err := doc.ReadFromFile("\\\\idcshare.op.internal.gridsumdissector.com\\idcshare\\wangyiqi\\test05.xml"); err != nil {
 		panic(err)
 	}
 
@@ -99,7 +99,7 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 					searchList = append(searchList, search)*/
 				}
 			case "LdapRequest":
-				eventData := event.SelectElement("EventData")
+				/*eventData := event.SelectElement("EventData")
 				system := event.SelectElement("System")
 
 				var BindId string
@@ -149,7 +149,7 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 					}
 					ldapRequestList[len(ldapRequestList)-1].SearchType = SearchType
 					ldapRequestList[len(ldapRequestList)-1].ErrMsg = ErrMsg
-				}
+				}*/
 		}
 
 	}
