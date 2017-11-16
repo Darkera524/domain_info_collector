@@ -8,7 +8,7 @@ import
 )
 
 func main(){
-	searchlist, _, _ := transfer.Parse_xml()
+	searchlist, ldapSearchList, _ := transfer.Parse_xml()
 	/*for _,ldap := range ldaplist{
 		fmt.Println(ldap.MessageId)
 		fmt.Println(ldap.BindId)
@@ -20,6 +20,11 @@ func main(){
 		//fmt.Println(search.Opcode)
 	}*/
 	err := db.SendSearchInfoToPostgresql(searchlist)
+	if err != nil{
+		fmt.Println(err.Error())
+	}
+
+	err = db.SendLdapSearchInfoToPostgresql(ldapSearchList)
 	if err != nil{
 		fmt.Println(err.Error())
 	}

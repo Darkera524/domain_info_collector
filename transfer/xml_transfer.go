@@ -12,17 +12,33 @@ type SearchInfo struct {
 	Filter string
 	RequiredAttributes string
 	TimeCreated string
-	Opcode string
-}
+	Index string
+	EntriesVisited string
+	EntriesReturned string
+	TimeEnded string
+	KernelTime string
+	UserTime string
+	ProcessId string
+	ThreadId string
+	ProcessorId string
+	}
 
 type LdapRequest struct {
 	BindId string
 	MessageId string
 	RemoteSocketString string
+	EncryptionType string
 	Udptcp string
 	SearchType string
 	ErrMsg string
+	RequestType string
 	TimeCreated string
+	TimeEnded string
+	KernelTime string
+	UserTime string
+	ProcessId string
+	ThreadId string
+	ProcessorId string
 }
 
 func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
@@ -31,7 +47,7 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 
 	doc := etree.NewDocument()
 
-	if err := doc.ReadFromFile("\\\\idcshare.op.internal.gridsumdissector.com\\idcshare\\wangyiqi\\test05.xml"); err != nil {
+	if err := doc.ReadFromFile("\\\\idcshare.op.internal.gridsumdissector.com\\idcshare\\wangyiqi\\test04.xml"); err != nil {
 		panic(err)
 	}
 
@@ -52,6 +68,9 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 				var ObjDN string
 				var Filter string
 				var RequiredAttributes string
+				var Index string
+				var EntriesVisited string
+				var EntriesReturned string
 
 				if opcode == "Start" {
 					datas := eventData.SelectElements("Data")
@@ -82,32 +101,47 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 						Filter:             Filter,
 						RequiredAttributes: RequiredAttributes,
 						TimeCreated:        system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknow"),
-						Opcode:             "start",
 					}
 					searchList = append(searchList, search)
 				} else {
-					/*search := &SearchInfo{
-						BindId:             eventData.SelectElement("BindId").Text(),
-						MessageId:          eventData.SelectElement("messageId").Text(),
-						Caller:             eventData.SelectElement("Caller").Text(),
-						ObjDN:              eventData.SelectElement("ObjDN").Text(),
-						Filter:             eventData.SelectElement("Filter").Text(),
-						RequiredAttributes: eventData.SelectElement("RequiredAttributes").Text(),
-						TimeCreated:        system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknow"),
-						Opcode:             "start",
+					datas := eventData.SelectElements("Data")
+					for _,data := range datas {
+						dataValue := data.Attr[0].Value
+						switch dataValue {
+						case "Index":
+							Index = data.Text()
+						case "EntriesVisited":
+							EntriesVisited = data.Text()
+						case "EntriesReturned":
+							EntriesReturned = data.Text()
+						}
 					}
-					searchList = append(searchList, search)*/
+
+					ins_len := len(searchList)
+					execution := system.SelectElement("Execution")
+
+					searchList[ins_len-1].Index = Index
+					searchList[ins_len-1].EntriesVisited = EntriesVisited
+					searchList[ins_len-1].EntriesReturned = EntriesReturned
+					searchList[ins_len-1].TimeEnded = system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknow")
+					searchList[ins_len-1].KernelTime = execution.SelectAttrValue("KernelTime", "unknow")
+					searchList[ins_len-1].UserTime = execution.SelectAttrValue("UserTime", "unknow")
+					searchList[ins_len-1].ProcessId = execution.SelectAttrValue("ProcessID", "unknow")
+					searchList[ins_len-1].ThreadId = execution.SelectAttrValue("ThreadID", "unknow")
+					searchList[ins_len-1].ProcessorId = execution.SelectAttrValue("ProcessorID", "unknow")
 				}
 			case "LdapRequest":
-				/*eventData := event.SelectElement("EventData")
+				eventData := event.SelectElement("EventData")
 				system := event.SelectElement("System")
 
 				var BindId string
 				var MessageId string
 				var RemoteSocketString string
 				var Udptcp string
+				var EncryptionType string
 				var SearchType string
 				var ErrMsg string
+				var RequestType string
 
 				if opcode == "Start" {
 					datas := eventData.SelectElements("Data")
@@ -120,6 +154,8 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 							BindId = data.Text()
 						case "RemoteSocketString":
 							RemoteSocketString = data.Text()
+						case "EncryptionType":
+							EncryptionType = data.Text()
 						case "udptcp":
 							Udptcp = data.Text()
 						}
@@ -130,8 +166,7 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 						MessageId:          MessageId,
 						RemoteSocketString: RemoteSocketString,
 						Udptcp:             Udptcp,
-						SearchType:         "",
-						ErrMsg:             "",
+						EncryptionType: EncryptionType,
 						TimeCreated:        system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknown"),
 					}
 					ldapRequestList = append(ldapRequestList, ldap)
@@ -145,11 +180,24 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 							SearchType = data.Text()
 						case "ErrMsg":
 							ErrMsg = data.Text()
+						case "RequestType":
+							RequestType = data.Text()
 						}
 					}
 					ldapRequestList[len(ldapRequestList)-1].SearchType = SearchType
 					ldapRequestList[len(ldapRequestList)-1].ErrMsg = ErrMsg
-				}*/
+					ldapRequestList[len(ldapRequestList)-1].RequestType = RequestType
+					ldapRequestList[len(ldapRequestList)-1].TimeEnded = system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknown")
+
+					ins_len := len(ldapRequestList)
+					execution := system.SelectElement("Execution")
+
+					ldapRequestList[ins_len-1].KernelTime = execution.SelectAttrValue("KernelTime", "unknow")
+					ldapRequestList[ins_len-1].UserTime = execution.SelectAttrValue("UserTime", "unknow")
+					ldapRequestList[ins_len-1].ProcessId = execution.SelectAttrValue("ProcessID", "unknow")
+					ldapRequestList[ins_len-1].ThreadId = execution.SelectAttrValue("ThreadID", "unknow")
+					ldapRequestList[ins_len-1].ProcessorId = execution.SelectAttrValue("ProcessorID", "unknow")
+				}
 		}
 
 	}
