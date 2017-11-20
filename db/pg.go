@@ -19,14 +19,16 @@ func SendSearchInfoToPostgresql(searchList []*transfer.SearchInfo)(err error){
 	defer  tx.Rollback()
 
 	var buffer bytes.Buffer
-	buffer.WriteString("INSERT INTO DsDirSearch (BindId,MessageId,Caller,ObjDN,Filter,RequiredAttributes,TimeCreated,Index,EntriesVisited,EntriesReturned,TimeEnded,KernelTime,UserTime,ProcessID,ThreadID,ProcessorID) VALUES")
+	buffer.WriteString("INSERT INTO DsDirSearch (BindId,MessageId,CallerIP,CallerPort,ObjDN,Filter,RequiredAttributes,TimeCreated,Index,EntriesVisited,EntriesReturned,TimeEnded,KernelTime,UserTime,ProcessID,ThreadID,ProcessorID,DomainServer) VALUES")
 	for i,search := range searchList{
 		buffer.WriteString("('")
 		buffer.WriteString(search.BindId)
 		buffer.WriteString("','")
 		buffer.WriteString(search.MessageId)
 		buffer.WriteString("','")
-		buffer.WriteString(search.Caller)
+		buffer.WriteString(search.CallerIP)
+		buffer.WriteString("','")
+		buffer.WriteString(search.CallerPort)
 		buffer.WriteString("','")
 		buffer.WriteString(search.ObjDN)
 		buffer.WriteString("','")
@@ -53,6 +55,8 @@ func SendSearchInfoToPostgresql(searchList []*transfer.SearchInfo)(err error){
 		buffer.WriteString(search.ThreadId)
 		buffer.WriteString("','")
 		buffer.WriteString(search.ProcessorId)
+		buffer.WriteString("','")
+		buffer.WriteString(search.DomainServer)
 		buffer.WriteString("')")
 		if i+1 != len(searchList){
 			buffer.WriteString(",")
@@ -86,14 +90,16 @@ func SendLdapSearchInfoToPostgresql(ldapList []*transfer.LdapRequest)(err error)
 	defer  tx.Rollback()
 
 	var buffer bytes.Buffer
-	buffer.WriteString("INSERT INTO LdapRequest (BindId,MessageId,RemoteSocketString,Udptcp,SearchType,Errmsg,TimeCreated,EncryptionType,RequestType,TimeEnded,KernelTime,UserTime,ProcessID,ThreadID,ProcessorID) VALUES")
+	buffer.WriteString("INSERT INTO LdapRequest (BindId,MessageId,RemoteSocketIP,RemoteSocketPort,Udptcp,SearchType,Errmsg,TimeCreated,EncryptionType,RequestType,TimeEnded,KernelTime,UserTime,ProcessID,ThreadID,ProcessorID,DomainServer) VALUES")
 	for i,search := range ldapList{
 		buffer.WriteString("('")
 		buffer.WriteString(search.BindId)
 		buffer.WriteString("','")
 		buffer.WriteString(search.MessageId)
 		buffer.WriteString("','")
-		buffer.WriteString(search.RemoteSocketString)
+		buffer.WriteString(search.RemoteSocketIP)
+		buffer.WriteString("','")
+		buffer.WriteString(search.RemoteSocketPort)
 		buffer.WriteString("','")
 		buffer.WriteString(search.Udptcp)
 		buffer.WriteString("','")
@@ -118,6 +124,8 @@ func SendLdapSearchInfoToPostgresql(ldapList []*transfer.LdapRequest)(err error)
 		buffer.WriteString(search.ThreadId)
 		buffer.WriteString("','")
 		buffer.WriteString(search.ProcessorId)
+		buffer.WriteString("','")
+		buffer.WriteString(search.DomainServer)
 		buffer.WriteString("')")
 		if i+1 != len(ldapList){
 			buffer.WriteString(",")
@@ -147,7 +155,7 @@ func initConfig() (config *pgx.ConnConfig){
 		Host: "127.0.0.1",
 		Port: 5433,
 		User: "postgres",
-		Database: "domain",
+		Database: "postgres",
 		Password: "root",
 	}
 	return config

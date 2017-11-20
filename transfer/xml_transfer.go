@@ -2,12 +2,16 @@ package transfer
 
 import (
 	"github.com/beevik/etree"
+	"strings"
+	"bytes"
+	"time"
 )
 
 type SearchInfo struct {
 	BindId string
 	MessageId string
-	Caller string
+	CallerIP string
+	CallerPort string
 	ObjDN string
 	Filter string
 	RequiredAttributes string
@@ -21,12 +25,14 @@ type SearchInfo struct {
 	ProcessId string
 	ThreadId string
 	ProcessorId string
+	DomainServer string
 	}
 
 type LdapRequest struct {
 	BindId string
 	MessageId string
-	RemoteSocketString string
+	RemoteSocketIP string
+	RemoteSocketPort string
 	EncryptionType string
 	Udptcp string
 	SearchType string
@@ -39,15 +45,19 @@ type LdapRequest struct {
 	ProcessId string
 	ThreadId string
 	ProcessorId string
+	DomainServer string
 }
 
-func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
+func Parse_xml(dir string , host string) ([]*SearchInfo,[]*LdapRequest, error) {
 	var searchList []*SearchInfo
 	var ldapRequestList []*LdapRequest
 
 	doc := etree.NewDocument()
 
-	if err := doc.ReadFromFile("\\\\idcshare.op.internal.gridsumdissector.com\\idcshare\\wangyiqi\\test04.xml"); err != nil {
+	//yesterday := get_yesterday()
+	//"\\\\idcshare.op.internal.gridsumdissector.com\\idcshare\\wangyiqi\\test05.XML"
+
+	if err := doc.ReadFromFile(dir); err != nil {
 		panic(err)
 	}
 
@@ -64,7 +74,8 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 
 				var BindId string
 				var MessageId string
-				var Caller string
+				var CallerIP string
+				var CallerPort string
 				var ObjDN string
 				var Filter string
 				var RequiredAttributes string
@@ -82,7 +93,11 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 						case "BindId":
 							BindId = data.Text()
 						case "Caller":
-							Caller = data.Text()
+							dataset := strings.Split(data.Text(),":")
+							CallerIP = dataset[0]
+							if len(dataset) == 2 {
+								CallerPort = strings.Split(data.Text(), ":")[1]
+							}
 						case "ObjDN":
 							ObjDN = data.Text()
 						case "Filter":
@@ -96,11 +111,13 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 					search := &SearchInfo{
 						BindId:             BindId,
 						MessageId:          MessageId,
-						Caller:             Caller,
+						CallerIP:             CallerIP,
+						CallerPort:  CallerPort,
 						ObjDN:              ObjDN,
 						Filter:             Filter,
 						RequiredAttributes: RequiredAttributes,
 						TimeCreated:        system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknow"),
+						DomainServer: host,
 					}
 					searchList = append(searchList, search)
 				} else {
@@ -136,7 +153,8 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 
 				var BindId string
 				var MessageId string
-				var RemoteSocketString string
+				var RemoteSocketIP string
+				var RemoteSocketPort string
 				var Udptcp string
 				var EncryptionType string
 				var SearchType string
@@ -153,7 +171,11 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 						case "BindId":
 							BindId = data.Text()
 						case "RemoteSocketString":
-							RemoteSocketString = data.Text()
+							dataset := strings.Split(data.Text(),":")
+							RemoteSocketIP = dataset[0]
+							if len(dataset) == 2 {
+								RemoteSocketPort = strings.Split(data.Text(), ":")[1]
+							}
 						case "EncryptionType":
 							EncryptionType = data.Text()
 						case "udptcp":
@@ -164,10 +186,12 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 					ldap := &LdapRequest{
 						BindId:             BindId,
 						MessageId:          MessageId,
-						RemoteSocketString: RemoteSocketString,
+						RemoteSocketIP: RemoteSocketIP,
+						RemoteSocketPort: RemoteSocketPort,
 						Udptcp:             Udptcp,
 						EncryptionType: EncryptionType,
 						TimeCreated:        system.SelectElement("TimeCreated").SelectAttrValue("SystemTime", "unknown"),
+						DomainServer: host,
 					}
 					ldapRequestList = append(ldapRequestList, ldap)
 
@@ -205,3 +229,16 @@ func Parse_xml() ([]*SearchInfo,[]*LdapRequest, error) {
 
 	return searchList,ldapRequestList,nil
 }
+
+func get_yesterday() string {
+	timestamp := time.Now().Unix()-86400
+	now := time.Unix(timestamp, 0)
+	date := strings.Split(strings.Split(now.String(), " ")[0], "-")
+	var buffer bytes.Buffer
+	for _,str := range date{
+		buffer.WriteString(str)
+	}
+	yesterday := buffer.String()
+	return yesterday
+}
+
